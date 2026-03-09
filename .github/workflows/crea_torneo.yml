@@ -1,0 +1,43 @@
+name: Crea Torneo Lichess
+
+on:
+  repository_dispatch:
+    types: [crea_torneo]
+  workflow_dispatch:
+    inputs:
+      tipo:
+        description: 'Tipo torneo'
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+
+jobs:
+  crea-torneo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codice
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installa dipendenze
+        run: |
+          pip install requests python-dotenv
+
+      - name: Crea tournament su Lichess
+        env:
+          LICHESS_TOKEN: ${{ secrets.LICHESS_TOKEN }}
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
+          TIPO_TORNEO: ${{ github.event.client_payload.tipo || inputs.tipo }}
+        run: |
+          python gestore_tornei.py --tipo $TIPO_TORNEO
