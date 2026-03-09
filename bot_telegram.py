@@ -19,6 +19,7 @@ Richiede env:
 
 import os
 import requests
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,6 +28,14 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GH_TOKEN = os.getenv("GH_TOKEN")
 GH_REPO = os.getenv("GH_REPO")
 
+# Whitelist di User ID autorizzati
+AUTHORIZED_USERS = {
+    652283475,  # Filippo
+}
+
+# File di log
+LOG_FILE = "torneo_log.txt"
+
 TIPI_TORNEO = {
     "1": {"nome": "1+0 Bullet", "cmd": "/bullet"},
     "2": {"nome": "2+1 Blitz", "cmd": "/blitz"},
@@ -34,6 +43,21 @@ TIPI_TORNEO = {
 }
 
 COMANDI = {v["cmd"]: k for k, v in TIPI_TORNEO.items()}
+
+
+def log_torneo(user_id: int, username: str, tipo: str) -> None:
+    """Registra nel file chi ha lanciato il torneo."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    nome_tipo = TIPI_TORNEO[tipo]["nome"]
+    log_entry = f"[{timestamp}] {username} ({user_id}) ha lanciato: {nome_tipo}\n"
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(log_entry)
+    print(log_entry.strip())
+
+
+def is_authorized(user_id: int) -> bool:
+    """Controlla se l'utente è autorizzato."""
+    return user_id in AUTHORIZED_USERS
 
 
 def send_message(chat_id: int, text: str, reply_markup: dict = None) -> None:
@@ -72,7 +96,14 @@ def get_keyboard() -> dict:
 def handle_message(update: dict) -> None:
     message = update.get("message", {})
     chat_id = message.get("chat", {}).get("id")
+    user_id = message.get("from", {}).get("id")
+    username = message.get("from", {}).get("username", "Unknown")
     text = message.get("text", "")
+
+    # Controlla autorizzazione
+    if not is_authorized(user_id):
+        send_message(chat_id, "❌ Non sei autorizzato a usare questo bot.")
+        return
 
     if text == "/start":
         send_message(
@@ -90,6 +121,7 @@ def handle_message(update: dict) -> None:
         nome = TIPI_TORNEO[tipo]["nome"]
         send_message(chat_id, f"🚀 Creazione torneo {nome}...")
         if trigger_github_action(tipo):
+            log_torneo(user_id, username, tipo)
             send_message(
                 chat_id,
                 f"✅ Tournament {nome} avviato! Riceverai il link su Telegram.",
@@ -101,13 +133,21 @@ def handle_message(update: dict) -> None:
 def handle_callback(update: dict) -> None:
     callback = update.get("callback_query", {})
     chat_id = callback.get("message", {}).get("chat", {}).get("id")
+    user_id = callback.get("from", {}).get("id")
+    username = callback.get("from", {}).get("username", "Unknown")
     data = callback.get("data", "")
+
+    # Controlla autorizzazione
+    if not is_authorized(user_id):
+        send_message(chat_id, "❌ Non sei autorizzato a usare questo bot.")
+        return
 
     if data.startswith("torneo_"):
         tipo = data.split("_")[1]
         nome = TIPI_TORNEO[tipo]["nome"]
         send_message(chat_id, f"🚀 Creazione torneo {nome}...")
         if trigger_github_action(tipo):
+            log_torneo(user_id, username, tipo)
             send_message(chat_id, f"✅ Tournament {nome} avviato!")
         else:
             send_message(chat_id, "❌ Errore. Riprova.")
