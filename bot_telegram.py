@@ -6,9 +6,9 @@ Usage:
 
 Il bot risponde ai comandi:
     /start - Mostra il menu dei tornei
-    /1 - Crea tournament 1+0 Bullet
-    /2 - Crea tournament 2+1 Bullet
-    /3 - Crea tournament 3+2 Chess960
+    /bullet - Crea tournament 1+0 Bullet
+    /blitz - Crea tournament 2+1 Blitz
+    /chess960 - Crea tournament 3+2 Chess960
     /aiuto - Mostra l'aiuto
 
 Richiede env:
@@ -28,10 +28,12 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 GH_REPO = os.getenv("GH_REPO")
 
 TIPI_TORNEO = {
-    "1": {"nome": "1+0 Bullet Arena", "desc": "1 min + 0 sec"},
-    "2": {"nome": "2+1 Bullet Arena", "desc": "2 min + 1 sec"},
-    "3": {"nome": "3+2 Chess960 Arena", "desc": "3 min + 2 sec"},
+    "1": {"nome": "1+0 Bullet", "cmd": "/bullet"},
+    "2": {"nome": "2+1 Blitz", "cmd": "/blitz"},
+    "3": {"nome": "3+2 Chess960", "cmd": "/chess960"},
 }
+
+COMANDI = {v["cmd"]: k for k, v in TIPI_TORNEO.items()}
 
 
 def send_message(chat_id: int, text: str, reply_markup: dict = None) -> None:
@@ -61,7 +63,7 @@ def get_keyboard() -> dict:
     return {
         "inline_keyboard": [
             [{"text": "1+0 Bullet", "callback_data": "torneo_1"}],
-            [{"text": "2+1 Bullet", "callback_data": "torneo_2"}],
+            [{"text": "2+1 Blitz", "callback_data": "torneo_2"}],
             [{"text": "3+2 Chess960", "callback_data": "torneo_3"}],
         ]
     }
@@ -81,15 +83,16 @@ def handle_message(update: dict) -> None:
     elif text == "/aiuto":
         send_message(
             chat_id,
-            "Comandi disponibili:\n/start - Menu tornei\n/1 - 1+0 Bullet\n/2 - 2+1 Bullet\n/3 - 3+2 Chess960",
+            "Comandi disponibili:\n/start - Menu tornei\n/bullet - 1+0 Bullet\n/blitz - 2+1 Blitz\n/chess960 - 3+2 Chess960",
         )
-    elif text in ["/1", "/2", "/3"]:
-        tipo = text[1]
-        send_message(chat_id, f"🚀 Creazione torneo {TIPI_TORNEO[tipo]['nome']}...")
+    elif text in COMANDI:
+        tipo = COMANDI[text]
+        nome = TIPI_TORNEO[tipo]["nome"]
+        send_message(chat_id, f"🚀 Creazione torneo {nome}...")
         if trigger_github_action(tipo):
             send_message(
                 chat_id,
-                f"✅ Tournament {TIPI_TORNEO[tipo]['nome']} avviato! Riceverai il link su Telegram.",
+                f"✅ Tournament {nome} avviato! Riceverai il link su Telegram.",
             )
         else:
             send_message(chat_id, "❌ Errore nell'avvio del tournament. Riprova.")
@@ -102,9 +105,10 @@ def handle_callback(update: dict) -> None:
 
     if data.startswith("torneo_"):
         tipo = data.split("_")[1]
-        send_message(chat_id, f"🚀 Creazione torneo {TIPI_TORNEO[tipo]['nome']}...")
+        nome = TIPI_TORNEO[tipo]["nome"]
+        send_message(chat_id, f"🚀 Creazione torneo {nome}...")
         if trigger_github_action(tipo):
-            send_message(chat_id, f"✅ Tournament {TIPI_TORNEO[tipo]['nome']} avviato!")
+            send_message(chat_id, f"✅ Tournament {nome} avviato!")
         else:
             send_message(chat_id, "❌ Errore. Riprova.")
 
