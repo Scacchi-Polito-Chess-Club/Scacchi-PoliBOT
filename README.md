@@ -4,61 +4,38 @@ Bot per la gestione di tornei di scacchi su Lichess con notifiche Telegram.
 
 ## Funzionalità
 
-- Creazione tornei Lichess (Bullet, Blitz, Chess960)
+- Creazione tornei Lichess (Bullet, Blitz, Chess960) via GitHub Actions
 - Notifiche Telegram con link diretto al torneo
-- Controllo minimo iscritti e annullamento automatico
-- Trigger remoto via GitHub Actions o bot Telegram
+- Trigger remoto da telefono
 
-## Installazione
+## Configurazione GitHub
 
-```bash
-pip install requests python-dotenv
-```
+Imposta i secret in **GitHub Settings > Secrets and variables > Actions**:
 
-## Configurazione
+- `LICHESS_TOKEN` - API token Lichess
+- `TELEGRAM_TOKEN` - Token bot Telegram
+- `TELEGRAM_CHAT_ID` - Chat ID
+- `TELEGRAM_TOPIC_ID` - Topic ID
+- `TEAM_ID` - Team ID Lichess
 
-Crea un file `.env`:
+## Utilizzo
 
-```env
-LICHESS_TOKEN=your_lichess_api_token
-TELEGRAM_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-TELEGRAM_TOPIC_ID=your_topic_id
-TEAM_ID=your_lichess_team_id
-```
+### Da GitHub Mobile/App
 
-## Utilizzo Locale
+1. Apri GitHub Mobile > Repository > Actions
+2. Clicca "Crea Torneo Lichess" > "Run workflow"
+3. Seleziona tipo (1, 2, 3) e avvia
 
-```bash
-# Menu interattivo
-python gestore_tornei.py
+### Da Bot Telegram
 
-# Tramite argomento
-python gestore_tornei.py --tipo 1   # 1+0 Bullet
-python gestore_tornei.py --tipo 2   # 2+1 Bullet
-python gestore_tornei.py --tipo 3   # 3+2 Chess960
-```
-
-## Utilizzo Remoto (da telefono)
-
-### Opzione 1: GitHub Mobile
-
-1. Imposta i secret in GitHub Settings > Secrets and variables > Actions:
-   - `LICHESS_TOKEN`, `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_TOPIC_ID`, `TEAM_ID`
-
-2. Apri GitHub Mobile > Repository > Actions > "Crea Torneo Lichess" > Run workflow
-
-### Opzione 2: Bot Telegram
-
-1. Crea un bot su @BotFather
-2. Crea un GitHub Personal Access Token (repo scope)
-3. Imposta i secret: `TELEGRAM_TOKEN`, `GH_TOKEN`, `GH_REPO`
-4. Esegui `python bot_telegram.py` (richiede hosting, es. Render/Railway)
+1. Crea bot su @BotFather
+2. Crea GitHub PAT (repo scope)
+3. Esegui `python bot_telegram.py` (richiede hosting)
 
 ## Tipi di Turno
 
-| Tipo | Cadenza | Variante | Min. Giocatori |
-|------|---------|----------|-----------------|
-| 1    | 1+0     | Standard | 10              |
-| 2    | 2+1     | Standard | 10              |
-| 3    | 3+2     | Chess960 | 10              |
+| Tipo | Cadenza | Variante |
+|------|---------|----------|
+| 1    | 1+0     | Standard |
+| 2    | 2+1     | Standard |
+| 3    | 3+2     | Chess960 |
