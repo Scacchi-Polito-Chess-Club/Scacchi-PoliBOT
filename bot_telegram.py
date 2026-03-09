@@ -31,7 +31,7 @@ GH_REPO = os.getenv("GH_REPO")
 # Whitelist di User ID autorizzati
 AUTHORIZED_USERS = {
     652283475,  # Filippo
-    1163968938 # Leonardo
+    1163968938,  # Leonardo
 }
 
 # File di log
@@ -73,15 +73,52 @@ def send_message(chat_id: int, text: str, reply_markup: dict = None) -> None:
     requests.post(url, json=dati)
 
 
-def trigger_github_action(tipo: str) -> bool:
+def trigger_github_action(tipo: str) -> tuple[bool, str]:
+    """
+    Trigghera GitHub Action per creare il torneo.
+    Ritorna (success: bool, message: str)
+    """
     url = f"https://api.github.com/repos/{GH_REPO}/dispatches"
     headers = {
         "Authorization": f"token {GH_TOKEN}",
         "Accept": "application/vnd.github.v3+json",
     }
     data = {"event_type": "crea_torneo", "client_payload": {"tipo": tipo}}
-    risposta = requests.post(url, headers=headers, json=data)
-    return risposta.status_code == 204
+
+    try:
+        risposta = requests.post(url, headers=headers, json=data, timeout=10)
+
+        # Log dettagliato
+        log_msg = f"[GH Action] Status: {risposta.status_code} | Response: {risposta.text[:200]}"
+        print(log_msg)
+
+        # GitHub ritorna 204 se OK, altri codici indicano errore
+        if risposta.status_code == 204:
+            return True, "Azione GitHub triggerata con successo"
+        elif risposta.status_code == 401:
+            return False, "❌ Token GitHub non valido o scaduto. Contatta l'admin."
+        elif risposta.status_code == 403:
+            return (
+                False,
+                "❌ Permessi insufficienti. Il token GitHub non ha accesso al repo.",
+            )
+        elif risposta.status_code == 404:
+            return False, "❌ Repository non trovato o non accessibile."
+        elif risposta.status_code == 422:
+            error_detail = risposta.json().get("message", "Payload non valido")
+            return False, f"❌ Errore nei dati: {error_detail}"
+        else:
+            return (
+                False,
+                f"❌ GitHub API error ({risposta.status_code}): {risposta.text[:100]}",
+            )
+
+    except requests.exceptions.Timeout:
+        return False, "❌ Timeout: GitHub non ha risposto in tempo. Riprova."
+    except requests.exceptions.ConnectionError:
+        return False, "❌ Errore di connessione: Non riesco a raggiungere GitHub."
+    except Exception as e:
+        return False, f"❌ Errore inatteso: {str(e)[:100]}"
 
 
 def get_keyboard() -> dict:
@@ -121,14 +158,15 @@ def handle_message(update: dict) -> None:
         tipo = COMANDI[text]
         nome = TIPI_TORNEO[tipo]["nome"]
         send_message(chat_id, f"🚀 Creazione torneo {nome}...")
-        if trigger_github_action(tipo):
+        success, message = trigger_github_action(tipo)
+        if success:
             log_torneo(user_id, username, tipo)
             send_message(
                 chat_id,
                 f"✅ Tournament {nome} avviato! Riceverai il link su Telegram.",
             )
         else:
-            send_message(chat_id, "❌ Errore nell'avvio del tournament. Riprova.")
+            send_message(chat_id, message)
 
 
 def handle_callback(update: dict) -> None:
@@ -147,11 +185,14 @@ def handle_callback(update: dict) -> None:
         tipo = data.split("_")[1]
         nome = TIPI_TORNEO[tipo]["nome"]
         send_message(chat_id, f"🚀 Creazione torneo {nome}...")
-        if trigger_github_action(tipo):
+        success, message = trigger_github_action(tipo)
+        if success:
             log_torneo(user_id, username, tipo)
-            send_message(chat_id, f"✅ Tournament {nome} avviato!")
+            send_message(
+                chat_id, f"✅ Tournament {nome} avviato! Riceverai il link su Telegram."
+            )
         else:
-            send_message(chat_id, "❌ Errore. Riprova.")
+            send_message(chat_id, message)
 
 
 def polling() -> None:
