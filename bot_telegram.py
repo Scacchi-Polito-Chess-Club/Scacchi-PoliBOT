@@ -31,6 +31,7 @@ GH_REPO = os.getenv("GH_REPO")
 # Whitelist di User ID autorizzati
 AUTHORIZED_USERS = {
     652283475,  # Filippo
+    1163968938 # Leonardo
 }
 
 # File di log
