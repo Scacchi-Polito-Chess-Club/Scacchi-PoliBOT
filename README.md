@@ -34,8 +34,8 @@ Imposta i secret in **GitHub Settings > Secrets and variables > Actions**:
 
 ## Tipi di Turno
 
-| Tipo | Cadenza | Variante |
-|------|---------|----------|
-| 1    | 1+0     | Standard |
-| 2    | 2+1     | Standard |
-| 3    | 3+2     | Chess960 |
+| Comando   | Cadenza | Variante |
+|-----------|---------|----------|
+| /bullet   | 1+0     | Standard |
+| /blitz    | 2+1     | Standard |
+| /chess960 | 3+2     | Chess960 |

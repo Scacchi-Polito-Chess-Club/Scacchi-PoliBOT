@@ -39,11 +39,11 @@ Scacchi-PoliBOT/
 
 ### Tipi Turno
 
-| Tipo | Cadenza | Variante |
-|------|---------|----------|
-| 1    | 1+0     | standard |
-| 2    | 2+1     | standard |
-| 3    | 3+2     | chess960 |
+| Comando   | Cadenza | Variante |
+|-----------|---------|----------|
+| /bullet   | 1+0     | standard |
+| /blitz    | 2+1     | standard |
+| /chess960 | 3+2     | chess960 |
 
 ## Telegram Bot
 
@@ -58,7 +58,7 @@ GH_REPO=username/repo
 ### Comandi
 
 - `/start` - Menu
-- `/1`, `/2`, `/3` - Crea torneo
+- `/bullet`, `/blitz`, `/chess960` - Crea torneo
 
 ## Code Style
 
