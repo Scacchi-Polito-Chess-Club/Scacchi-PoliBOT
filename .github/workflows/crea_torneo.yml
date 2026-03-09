@@ -19,17 +19,13 @@ jobs:
   crea-torneo:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout codice
-        uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Installa dipendenze
-        run: |
-          pip install requests python-dotenv
+        run: pip install requests
 
       - name: Crea tournament su Lichess
         env:
@@ -40,4 +36,45 @@ jobs:
           TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
           TIPO_TORNEO: ${{ github.event.client_payload.tipo || inputs.tipo }}
         run: |
-          python gestore_tornei.py --tipo $TIPO_TORNEO
+          python3 << 'EOF'
+          import os
+          import requests
+          from datetime import datetime, timedelta
+          import time
+
+          TIPO = os.environ.get('TIPO_TORNEO', '1')
+          TORNEO = {
+              '1': {'nome': 'Scacchi PoliTO - 1+0 Bullet', 'tempo': 1, 'inc': 0, 'var': 'standard'},
+              '2': {'nome': 'Scacchi PoliTO - 2+1 Bullet', 'tempo': 2, 'inc': 1, 'var': 'standard'},
+              '3': {'nome': 'Scacchi PoliTO - 3+2 Chess960', 'tempo': 3, 'inc': 2, 'var': 'chess960'},
+          }[TIPO]
+
+          headers = {'Authorization': f'Bearer {os.environ.get("LICHESS_TOKEN")}'}
+          orario = datetime.now() + timedelta(minutes=60)
+          
+          dati = {
+              'name': TORNEO['nome'],
+              'clockTime': TORNEO['tempo'],
+              'clockIncrement': TORNEO['inc'],
+              'variant': TORNEO['var'],
+              'minutes': 60,
+              'conditions.teamMember.teamId': os.environ.get('TEAM_ID'),
+              'startDate': int(orario.timestamp() * 1000)
+          }
+          
+          r = requests.post('https://lichess.org/api/tournament', headers=headers, data=dati)
+          
+          if r.status_code == 200:
+              tid = r.json()['id']
+              link = f"https://lichess.org/tournament/{tid}"
+              print(f"Torneo creato: {link}")
+              
+              msg = f"🏆 <b>NUOVO TORNEO CREATO!</b> 🏆\n\n♟️ <b>Nome:</b> {TORNEO['nome']}\n⏱️ <b>Cadenza:</b> {TORNEO['tempo']}+{TORNEO['inc']}\n⏳ Inizia tra 60 minuti!\n👉 Partecipa! {link}"
+              
+              requests.post(
+                  f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_TOKEN')}/sendMessage",
+                  json={"chat_id": os.environ.get('TELEGRAM_CHAT_ID'), "message_thread_id": os.environ.get('TELEGRAM_TOPIC_ID'), "text": msg, "parse_mode": "HTML"}
+              )
+          else:
+              print(f"Errore: {r.text}")
+          EOF
