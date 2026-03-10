@@ -9,9 +9,6 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Get the user running the command
-BOT_USER=$(whoami)
-
 # Verify .env exists (needed for systemd service)
 if [ ! -f ".env" ]; then
     echo "Error: .env file not found"
@@ -21,6 +18,9 @@ fi
 BOT_PATH=$(pwd)
 PYTHON_PATH="${BOT_PATH}/.venv/bin/python"
 SERVICE_FILE="/etc/systemd/system/scacchi-bot.service"
+
+# Get the actual user (owner of the directory, not sudo user)
+BOT_USER=$(stat -c '%U' "$BOT_PATH")
 
 echo "Setting up Scacchi PoliBOT"
 echo "Bot path: $BOT_PATH"
@@ -51,6 +51,7 @@ Type=simple
 User=$BOT_USER
 WorkingDirectory=$BOT_PATH
 EnvironmentFile=$BOT_PATH/.env
+Environment=PYTHONPATH=$BOT_PATH
 ExecStart=$PYTHON_PATH $BOT_PATH/src/bot.py
 Restart=always
 RestartSec=10
