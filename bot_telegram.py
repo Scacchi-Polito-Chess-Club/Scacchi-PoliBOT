@@ -28,6 +28,14 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GH_TOKEN = os.getenv("GH_TOKEN")
 GH_REPO = os.getenv("GH_REPO")
 
+# Debug: stampa le variabili caricate
+print(f"[DEBUG] TELEGRAM_TOKEN caricato: {'✓' if TELEGRAM_TOKEN else '✗'}")
+print(f"[DEBUG] GH_TOKEN caricato: {'✓' if GH_TOKEN else '✗'}")
+print(f"[DEBUG] GH_REPO: {GH_REPO}")
+if GH_TOKEN:
+    print(f"[DEBUG] GH_TOKEN (primi 20 char): {GH_TOKEN[:20]}...")
+print(f"[DEBUG] Working directory: {os.getcwd()}")
+
 # Whitelist di User ID autorizzati
 AUTHORIZED_USERS = {
     652283475,  # Filippo
@@ -86,6 +94,11 @@ def trigger_github_action(tipo: str) -> tuple[bool, str]:
     data = {"event_type": "crea_torneo", "client_payload": {"tipo": tipo}}
 
     try:
+        # Debug: stampa URL e token prima di mandare la richiesta
+        print(f"[DEBUG] URL GitHub: {url}")
+        print(f"[DEBUG] Token (primi 20 char): {GH_TOKEN[:20]}...")
+        print(f"[DEBUG] Data: {data}")
+
         risposta = requests.post(url, headers=headers, json=data, timeout=10)
 
         # Log dettagliato
