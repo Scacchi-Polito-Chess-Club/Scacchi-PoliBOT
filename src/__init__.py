@@ -1,0 +1,1 @@
+"""Scacchi PoliBOT package."""

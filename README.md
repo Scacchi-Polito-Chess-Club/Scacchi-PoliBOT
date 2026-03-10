@@ -1,41 +1,110 @@
 # Scacchi PoliBOT
 
-Bot per la gestione di tornei di scacchi su Lichess con notifiche Telegram.
+Telegram bot to create Lichess tournaments with notifications.
 
-## Funzionalità
+## Features
 
-- Creazione tornei Lichess (Bullet, Blitz, Chess960) via GitHub Actions
-- Notifiche Telegram con link diretto al torneo
-- Trigger remoto da telefono
+- Create Lichess tournaments (Bullet, Blitz, Chess960)
+- Telegram notifications with tournament links
+- Runs on your own server
 
-## Configurazione GitHub
+## Setup
 
-Imposta i secret in **GitHub Settings > Secrets and variables > Actions**:
+### 1. Clone and install dependencies
 
-- `LICHESS_TOKEN` - API token Lichess
-- `TELEGRAM_TOKEN` - Token bot Telegram
-- `TELEGRAM_CHAT_ID` - Chat ID
-- `TELEGRAM_TOPIC_ID` - Topic ID
-- `TEAM_ID` - Team ID Lichess
+```bash
+git clone <repo>
+cd Scacchi-PoliBOT
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-## Utilizzo
+### 2. Configure environment
 
-### Da GitHub Mobile/App
+Copy `.env.example` to `.env` and fill in your tokens:
 
-1. Apri GitHub Mobile > Repository > Actions
-2. Clicca "Crea Torneo Lichess" > "Run workflow"
-3. Seleziona tipo (1, 2, 3) e avvia
+```bash
+cp .env.example .env
+# Edit .env with your Telegram and Lichess tokens
+```
 
-### Da Bot Telegram
+### 3. Install systemd service
 
-1. Crea bot su @BotFather
-2. Crea GitHub PAT (repo scope)
-3. Esegui `python bot_telegram.py` (richiede hosting)
+```bash
+sudo bash setup.sh
+```
 
-## Tipi di Turno
+This will:
+- Create logs directory
+- Generate systemd service file
+- Enable auto-start on reboot
 
-| Comando   | Cadenza | Variante |
-|-----------|---------|----------|
-| /bullet   | 1+0     | Standard |
-| /blitz    | 2+1     | Standard |
-| /chess960 | 3+2     | Chess960 |
+### 4. Start the bot
+
+```bash
+sudo systemctl start scacchi-bot
+```
+
+## Commands
+
+| Command      | Type       |
+|--------------|-----------|
+| `/start`     | Show menu |
+| `/bullet`    | 1+0 Bullet |
+| `/blitz`     | 2+1 Blitz  |
+| `/chess960`  | 3+2 Chess960 |
+| `/help`      | Help     |
+
+## Usage
+
+```bash
+# Start/Stop/Restart
+sudo systemctl start scacchi-bot
+sudo systemctl stop scacchi-bot
+sudo systemctl restart scacchi-bot
+
+# Enable/Disable auto-start on boot
+sudo systemctl enable scacchi-bot
+sudo systemctl disable scacchi-bot
+
+# Check status
+sudo systemctl status scacchi-bot
+
+# View logs
+tail -f logs/bot.log
+```
+
+## Project Structure
+
+```
+Scacchi-PoliBOT/
+├── src/
+│   ├── bot.py          # Main entry point
+│   ├── config/         # Configuration (tokens, constants)
+│   ├── services/       # Lichess and Telegram APIs
+│   ├── handlers/       # Message handling logic
+│   ├── models/         # Pydantic models
+│   └── utils/          # Logging and utilities
+├── setup.sh            # Systemd service installer
+└── .env                # Environment variables
+```
+
+## Requirements
+
+- Python 3.8+
+- `requests` library
+- `python-dotenv`
+- Pydantic
+
+## Environment Variables
+
+Create a `.env` file from `.env.example` and fill in:
+
+| Variable | Description |
+|----------|-------------|
+| `TELEGRAM_TOKEN` | Get from @BotFather |
+| `TELEGRAM_CHAT_ID` | Your chat ID |
+| `TELEGRAM_TOPIC_ID` | Your topic/forum ID (optional) |
+| `LICHESS_TOKEN` | API token from Lichess settings |
+| `TEAM_ID` | Your Lichess team ID |
