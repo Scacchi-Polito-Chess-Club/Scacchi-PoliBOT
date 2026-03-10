@@ -1,7 +1,7 @@
 """Handle Telegram messages and callbacks."""
 
 from typing import Dict, List, Any
-from src.config import AUTHORIZED_USERS, TOURNAMENT_TYPES, COMMANDS, LOG_FILE
+from src.config import AUTHORIZED_USERS, TOURNAMENT_TYPES, COMMANDS, LOG_FILE, TELEGRAM_CHAT_ID
 from src.services import LichessService, TelegramService
 from src.utils import Logger
 
@@ -33,9 +33,10 @@ class MessageHandler:
         user_id = message.get("from", {}).get("id")
         username = message.get("from", {}).get("username", "Unknown")
         text = message.get("text", "")
+        chat_id = message.get("chat", {}).get("id")
 
         if not self.is_authorized(user_id):
-            self.telegram.send_message("❌ Not authorized")
+            self.telegram.send_message("❌ Not authorized", chat_id=chat_id)
             logger.warning(f"Unauthorized access from {username} ({user_id})")
             return
 
@@ -43,11 +44,13 @@ class MessageHandler:
             self.telegram.send_keyboard(
                 "🏆 <b>Lichess Tournament Manager</b>\n\nSelect tournament type:",
                 self.get_keyboard(),
+                chat_id=user_id,
             )
 
         elif text == "/help":
             self.telegram.send_message(
-                "/start - Menu\n/bullet - 1+0 Bullet\n/blitz - 2+1 Blitz\n/chess960 - 3+2 Chess960"
+                "/start - Menu\n/bullet - 1+0 Bullet\n/blitz - 2+1 Blitz\n/chess960 - 3+2 Chess960",
+                chat_id=user_id,
             )
 
         elif text in COMMANDS:
@@ -62,7 +65,7 @@ class MessageHandler:
         data = callback.get("data", "")
 
         if not self.is_authorized(user_id):
-            self.telegram.send_message("❌ Not authorized")
+            self.telegram.send_message("❌ Not authorized", chat_id=user_id)
             logger.warning(f"Unauthorized callback from {username} ({user_id})")
             return
 
@@ -74,7 +77,7 @@ class MessageHandler:
         """Create tournament and notify."""
         tournament = TOURNAMENT_TYPES[tournament_id]
 
-        self.telegram.send_message(f"🚀 Creating {tournament.name}...")
+        self.telegram.send_message(f"🚀 Creating {tournament.name}...", chat_id=user_id)
 
         success, result = self.lichess.create_tournament(
             tournament.full_name,
@@ -94,7 +97,7 @@ class MessageHandler:
                 f"👉 Join: {result}"
             )
 
-            self.telegram.send_message(msg)
+            self.telegram.send_message(msg, chat_id=TELEGRAM_CHAT_ID)
 
         else:
-            self.telegram.send_message(f"❌ Error: {result}")
+            self.telegram.send_message(f"❌ Error: {result}", chat_id=user_id)
