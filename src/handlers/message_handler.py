@@ -98,6 +98,7 @@ class MessageHandler:
             )
 
             self.telegram.send_message(msg, chat_id=TELEGRAM_CHAT_ID)
+            self.telegram.send_message("Tournament created! 🏆", chat_id=user_id)
 
         else:
             self.telegram.send_message(f"❌ Error: {result}", chat_id=user_id)
