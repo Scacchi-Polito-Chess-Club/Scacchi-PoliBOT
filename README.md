@@ -40,6 +40,12 @@ This will:
 - Generate systemd service file
 - Enable auto-start on reboot
 
+**Note:** If logs directory has wrong permissions (run as root issue):
+
+```bash
+sudo chown -R $USER:$USER logs
+```
+
 ### 4. Start the bot
 
 ```bash
