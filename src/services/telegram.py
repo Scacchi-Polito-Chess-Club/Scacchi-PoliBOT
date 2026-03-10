@@ -14,11 +14,11 @@ class TelegramService:
 
     BASE_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-    def send_message(self, text: str) -> bool:
+    def send_message(self, text: str, chat_id: int) -> bool:
         """Send message to chat."""
         payload = TelegramSendMessagePayload(
-            chat_id=TELEGRAM_CHAT_ID,
-            message_thread_id=TELEGRAM_TOPIC_ID,
+            chat_id=chat_id,
+            message_thread_id=TELEGRAM_TOPIC_ID if chat_id == TELEGRAM_CHAT_ID else None,
             text=text,
         )
 
@@ -46,12 +46,17 @@ class TelegramService:
             logger.error(f"Exception: {str(e)[:100]}")
             return False
 
-    def send_keyboard(self, text: str, buttons: List[List[Dict[Any, Any]]]) -> bool:
+    def send_keyboard(
+        self,
+        text: str,
+        buttons: List[List[Dict[Any, Any]]],
+        chat_id: int,
+    ) -> bool:
         """Send message with inline keyboard."""
         payload = TelegramSendMessagePayload(
-            chat_id=TELEGRAM_CHAT_ID,
+            chat_id=chat_id,
             text=text,
-            message_thread_id=TELEGRAM_TOPIC_ID,
+            message_thread_id=TELEGRAM_TOPIC_ID if chat_id == TELEGRAM_CHAT_ID else None,
             reply_markup={"inline_keyboard": buttons},
         )
 
