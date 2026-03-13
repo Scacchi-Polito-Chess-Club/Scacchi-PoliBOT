@@ -1,58 +1,82 @@
-"""Logging utility.
+"""Logging utility with automatic daily rotation and cleanup.
 
-This module provides a simple logger class that writes log messages
-to both a file and the console.
+This module provides a Logger class that writes log messages to both a file
+(with daily rotation) and the console.
 """
 
-from datetime import datetime
+import logging
+from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
 
 class Logger:
-    """Logger that writes messages to a file and prints to console.
+    """Logger that writes messages to a rotating file and prints to console.
 
     Attributes:
-        log_file: Path to the log file.
+        log_file: Path to the log file (will rotate daily).
     """
 
-    def __init__(self, log_file: Path) -> None:
+    def __init__(self, log_file: Path, backup_count: int = 30) -> None:
         """Initialize the logger.
 
         Args:
             log_file: Path to the log file where messages will be written.
+            backup_count: Number of old log files to keep (default: 30 days).
         """
         self.log_file = log_file
+        self.backup_count = backup_count
+        self.logger = self._setup_logger()
 
-    def log(self, level: str, message: str) -> None:
-        """Write a log entry with the given level and message.
+    def _setup_logger(self) -> logging.Logger:
+        """Set up Python's standard logger with file and console handlers."""
+        logger = logging.getLogger("scacchi_bot")
+        logger.setLevel(logging.DEBUG)
 
-        Args:
-            level: The log level (e.g., INFO, ERROR, DEBUG).
-            message: The message to log.
-        """
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        entry = f"[{timestamp}] [{level}] {message}\n"
+        # Prevent duplicate handlers if Logger is instantiated multiple times
+        if logger.handlers:
+            return logger
 
-        with open(self.log_file, "a", encoding="utf-8") as f:
-            f.write(entry)
-        print(entry.strip())
+        # File handler with daily rotation, keeping 30 days of backups
+        file_handler = TimedRotatingFileHandler(
+            filename=self.log_file,
+            when="midnight",
+            interval=1,
+            backupCount=self.backup_count,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(logging.DEBUG)
+
+        # Console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+
+        # Formatter: [YYYY-MM-DD HH:MM:SS] [LEVEL] message
+        formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
+        formatter.datefmt = "%Y-%m-%d %H:%M:%S"
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+
+        return logger
 
     def info(self, message: str) -> None:
         """Log an info message."""
-        self.log("INFO", message)
+        self.logger.info(message)
 
     def error(self, message: str) -> None:
         """Log an error message."""
-        self.log("ERROR", message)
+        self.logger.error(message)
 
     def debug(self, message: str) -> None:
         """Log a debug message."""
-        self.log("DEBUG", message)
+        self.logger.debug(message)
 
     def success(self, message: str) -> None:
         """Log a success message."""
-        self.log("SUCCESS", message)
+        self.logger.info(f"✓ {message}")
 
     def warning(self, message: str) -> None:
         """Log a warning message."""
-        self.log("WARNING", message)
+        self.logger.warning(message)
