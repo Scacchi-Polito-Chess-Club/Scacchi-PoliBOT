@@ -33,10 +33,9 @@ class MessageHandler:
         user_id = message.get("from", {}).get("id")
         username = message.get("from", {}).get("username", "Unknown")
         text = message.get("text", "")
-        chat_id = message.get("chat", {}).get("id")
 
         if not self.is_authorized(user_id):
-            self.telegram.send_message("❌ Not authorized", chat_id=chat_id)
+            self.telegram.send_message("❌ Not authorized", chat_id=user_id)
             logger.warning(f"Unauthorized access from {username} ({user_id})")
             return
 
