@@ -16,6 +16,8 @@ LOG_FILE = LOG_DIR / "bot.log"
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "0"))
 TELEGRAM_TOPIC_ID = int(os.getenv("TELEGRAM_TOPIC_ID", "0"))
+TELEGRAM_PUZZLE_TOPIC_ID = int(os.getenv("TELEGRAM_PUZZLE_TOPIC_ID", 0))
+
 
 # Lichess
 LICHESS_TOKEN = os.getenv("LICHESS_TOKEN")

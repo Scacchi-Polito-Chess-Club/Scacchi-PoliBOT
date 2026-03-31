@@ -6,6 +6,7 @@ import requests
 from src.config import LICHESS_TOKEN, TEAM_ID, LOG_FILE
 from src.utils import Logger
 from src.models import TournamentPayload
+import random
 
 logger = Logger(LOG_FILE)
 
@@ -88,3 +89,35 @@ class LichessService:
         except Exception as e:
             logger.error(f"Exception: {str(e)[:100]}")
             return False, str(e)[:100]
+        
+    def get_puzzle(self) -> tuple[bool, dict]:
+        """Fetch a specific difficulty puzzle from Lichess."""
+        try:
+            # 1 in 100 chance for the hardest puzzle
+            roll = random.randint(1, 100)
+            if roll == 1:
+                difficulty = "hardest"
+            else:
+                # Using the exact strings the Lichess API expects
+                difficulty = random.choice(["easier", "normal", "harder"])
+
+            logger.info(f"Fetching {difficulty} Lichess puzzle")
+            
+            # Request puzzle with the difficulty query
+            response = requests.get(
+                f"{self.BASE_URL}/puzzle/next",
+                params={"difficulty": difficulty},
+                timeout=15
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                data["custom_difficulty"] = difficulty # Pass difficulty back to handler
+                return True, data
+            else:
+                logger.error(f"Failed to fetch puzzle. Status: {response.status_code}")
+                return False, {}
+
+        except Exception as e:
+            logger.error(f"Exception fetching puzzle: {str(e)[:100]}")
+            return False, {}
