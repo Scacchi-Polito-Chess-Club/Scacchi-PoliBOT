@@ -25,6 +25,7 @@ TEAM_ID = os.getenv("TEAM_ID")
 AUTHORIZED_USERS = {
     652283475,  # Filippo
     1163968938,  # Leonardo
+    316832183,  # Roman
 }
 
 # Tournament types - using Pydantic model
