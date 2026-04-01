@@ -1,8 +1,13 @@
 """Telegram Bot service."""
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import requests
-from src.config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_TOPIC_ID, LOG_FILE
+from src.config import (
+    TELEGRAM_TOKEN,
+    TELEGRAM_CHAT_ID,
+    TELEGRAM_TOURNAMENTS_TOPIC_ID,
+    LOG_FILE,
+)
 from src.utils import Logger
 from src.models import TelegramSendMessagePayload
 
@@ -14,11 +19,11 @@ class TelegramService:
 
     BASE_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-    def send_message(self, text: str, chat_id: int) -> bool:
+    def send_message(self, text: str, chat_id: int, topic_id: Optional[int] = None) -> bool:
         """Send message to chat."""
         payload = TelegramSendMessagePayload(
             chat_id=chat_id,
-            message_thread_id=TELEGRAM_TOPIC_ID if chat_id == TELEGRAM_CHAT_ID else None,
+            message_thread_id=(topic_id),
             text=text,
         )
 
@@ -56,7 +61,9 @@ class TelegramService:
         payload = TelegramSendMessagePayload(
             chat_id=chat_id,
             text=text,
-            message_thread_id=TELEGRAM_TOPIC_ID if chat_id == TELEGRAM_CHAT_ID else None,
+            message_thread_id=(
+                TELEGRAM_TOURNAMENTS_TOPIC_ID if chat_id == TELEGRAM_CHAT_ID else None
+            ),
             reply_markup={"inline_keyboard": buttons},
         )
 
@@ -84,35 +91,23 @@ class TelegramService:
         caption: str,
         chat_id: int,
         topic_id: Optional[int] = None,
-    ) -> tuple[bool, int]:
+    ) -> Tuple[bool, Optional[int]]:
         """Send a photo with a caption. Returns (success, message_id).
 
         Args:
             photo_url: URL of the photo to send.
             caption:   HTML caption text.
             chat_id:   Target chat ID.
-            topic_id:  Optional topic (message_thread_id) override. When None,
-                       falls back to TELEGRAM_TOPIC_ID for the main group chat,
-                       or no thread for private chats.
+            topic_id:  Optional topic (message_thread_id).
         """
-        # Resolve which topic to use:
-        #   - explicit topic_id always wins
-        #   - fall back to the default TELEGRAM_TOPIC_ID for the main group
-        #   - otherwise no thread
-        resolved_topic = (
-            topic_id
-            if topic_id is not None
-            else (TELEGRAM_TOPIC_ID if chat_id == TELEGRAM_CHAT_ID else None)
-        )
 
         payload: Dict[str, Any] = {
             "chat_id": chat_id,
             "photo": photo_url,
             "caption": caption,
             "parse_mode": "HTML",
+            "message_thread_id": topic_id,
         }
-        if resolved_topic:
-            payload["message_thread_id"] = resolved_topic
 
         try:
             response = requests.post(
@@ -134,13 +129,20 @@ class TelegramService:
             logger.error(f"Exception sending photo: {str(e)[:100]}")
             return False, None
 
-    def edit_message_caption(self, chat_id: int, message_id: int, new_caption: str) -> bool:
+    def edit_message_caption(
+        self,
+        chat_id: int,
+        topic_id: Optional[int],
+        message_id: int,
+        new_caption: str,
+    ) -> bool:
         """Edit the caption of an existing message."""
         payload = {
             "chat_id": chat_id,
             "message_id": message_id,
             "caption": new_caption,
             "parse_mode": "HTML",
+            "message_thread_id": topic_id,
         }
         try:
             response = requests.post(
