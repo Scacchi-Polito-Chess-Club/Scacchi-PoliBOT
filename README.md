@@ -56,11 +56,13 @@ sudo systemctl start scacchi-bot
 
 | Command      | Type       |
 |--------------|-----------|
-| `/start`     | Show menu |
+| `/help`      | Help     |
+| `/tournaments`     | Tournaments Overview |
 | `/bullet`    | 1+0 Bullet |
 | `/blitz`     | 2+1 Blitz  |
 | `/chess960`  | 3+2 Chess960 |
-| `/help`      | Help     |
+| `/puzzle`  | Send puzzle |
+
 
 ## Usage
 
@@ -111,6 +113,7 @@ Create a `.env` file from `.env.example` and fill in:
 |----------|-------------|
 | `TELEGRAM_TOKEN` | Get from @BotFather |
 | `TELEGRAM_CHAT_ID` | Your chat ID |
-| `TELEGRAM_TOPIC_ID` | Your topic/forum ID (optional) |
+| `TELEGRAM_TOURNAMENTS_TOPIC_ID` | Your topic/forum ID for lichess tournaments (optional) |
+| `TELEGRAM_PUZZLES_TOPIC_ID` | Your topic/forum ID for lichess puzzles (optional) |
 | `LICHESS_TOKEN` | API token from Lichess settings |
 | `TEAM_ID` | Your Lichess team ID |

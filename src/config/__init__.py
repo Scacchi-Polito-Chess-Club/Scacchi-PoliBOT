@@ -15,7 +15,9 @@ LOG_FILE = LOG_DIR / "bot.log"
 # Telegram
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "0"))
-TELEGRAM_TOPIC_ID = int(os.getenv("TELEGRAM_TOPIC_ID", "0"))
+TELEGRAM_TOURNAMENTS_TOPIC_ID = int(os.getenv("TELEGRAM_TOURNAMENTS_TOPIC_ID", "0"))
+TELEGRAM_PUZZLE_TOPIC_ID = int(os.getenv("TELEGRAM_PUZZLE_TOPIC_ID", 0))
+
 
 # Lichess
 LICHESS_TOKEN = os.getenv("LICHESS_TOKEN")
@@ -23,9 +25,7 @@ TEAM_ID = os.getenv("TEAM_ID")
 
 # Authorized users
 AUTHORIZED_USERS = {
-    652283475,  # Filippo
-    1163968938,  # Leonardo
-    316832183,  # Roman
+    int(user_id) for user_id in os.getenv("AUTHORIZED_USERS", "").split(",") if user_id
 }
 
 # Tournament types - using Pydantic model
@@ -58,4 +58,10 @@ TOURNAMENT_TYPES: dict[str, TournamentType] = {
     ),
 }
 
-COMMANDS = {v.cmd: k for k, v in TOURNAMENT_TYPES.items()}
+TOURNAMENTS_COMMANDS = {v.cmd: k for k, v in TOURNAMENT_TYPES.items()}
+
+TOURNAMENTS_KEYBOARD = [
+    [{"text": "1+0 Bullet", "callback_data": "tournament_bullet10"}],
+    [{"text": "2+1 Blitz", "callback_data": "tournament_blitz21"}],
+    [{"text": "3+2 Chess960", "callback_data": "tournament_chess960"}],
+]
