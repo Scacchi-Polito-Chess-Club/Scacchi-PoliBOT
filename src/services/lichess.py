@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 import sys
 import requests
+from typing import Dict, Any
 from src.config import LICHESS_TOKEN, TEAM_ID, LOG_FILE
 from src.utils import Logger
 from src.models import TournamentPayload
@@ -89,8 +90,8 @@ class LichessService:
         except Exception as e:
             logger.error(f"Exception: {str(e)[:100]}")
             return False, str(e)[:100]
-        
-    def get_puzzle(self) -> tuple[bool, dict]:
+
+    def get_puzzle(self) -> tuple[bool, Dict[Any, Any]]:
         """Fetch a specific difficulty puzzle from Lichess."""
         try:
             # 1 in 100 chance for the hardest puzzle
@@ -102,17 +103,15 @@ class LichessService:
                 difficulty = random.choice(["easier", "normal", "harder"])
 
             logger.info(f"Fetching {difficulty} Lichess puzzle")
-            
+
             # Request puzzle with the difficulty query
             response = requests.get(
-                f"{self.BASE_URL}/puzzle/next",
-                params={"difficulty": difficulty},
-                timeout=15
+                f"{self.BASE_URL}/puzzle/next", params={"difficulty": difficulty}, timeout=15
             )
 
             if response.status_code == 200:
                 data = response.json()
-                data["custom_difficulty"] = difficulty # Pass difficulty back to handler
+                data["custom_difficulty"] = difficulty  # Pass difficulty back to handler
                 return True, data
             else:
                 logger.error(f"Failed to fetch puzzle. Status: {response.status_code}")
