@@ -62,6 +62,6 @@ TOURNAMENTS_COMMANDS = {v.cmd: k for k, v in TOURNAMENT_TYPES.items()}
 
 TOURNAMENTS_KEYBOARD = [
     [{"text": "1+0 Bullet", "callback_data": "tournament_bullet10"}],
-    [{"text": "2+1 Blitz", "callback_data": "tournament_blitz20"}],
+    [{"text": "2+1 Blitz", "callback_data": "tournament_blitz21"}],
     [{"text": "3+2 Chess960", "callback_data": "tournament_chess960"}],
 ]
