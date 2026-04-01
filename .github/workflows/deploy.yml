@@ -1,0 +1,22 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: kasparov.polito.it
+          username: fgreco
+          port: 125
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/fgreco/Scacchi-PoliBOT
+            git pull origin main
+            sudo systemctl stop scacchi-bot
+            sudo systemctl start scacchi-bot
