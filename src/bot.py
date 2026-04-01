@@ -21,7 +21,7 @@ def main():
     # Start the puzzle scheduler in a daemon thread
     scheduler_thread = threading.Thread(
         target=puzzle_scheduler,
-        args=(handler,),
+        args=(),
         daemon=True,
         name="PuzzleScheduler",
     )
