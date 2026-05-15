@@ -32,7 +32,6 @@ def side_to_move(fen: str) -> str:
 
 def build_puzzle_caption(
     rating: int | str,
-    themes: str,
     side: str,
     display_difficulty: str,
 ) -> str:
@@ -40,8 +39,6 @@ def build_puzzle_caption(
     return (
         f"🧩 <b>{display_difficulty} Puzzle</b>\n"
         f"🎯 <b>{side} to move</b>\n"
-        f"⭐ <b>Rating:</b> {rating}\n"
-        f"🏷️ <b>Themes:</b> {themes}\n\n"
         f"💡 Solution in 4 hours\n\n"
     )
 
