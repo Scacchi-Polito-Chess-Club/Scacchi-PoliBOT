@@ -22,10 +22,10 @@ telegram = TelegramService()
 
 @staticmethod
 def side_to_move(fen: str) -> str:
-    """Return 'White' or 'Black' from a FEN string."""
+    """Return 'White' or 'Black' for the player solving the puzzle."""
     try:
         color = fen.split(" ")[1]
-        return "White" if color == "w" else "Black"
+        return "Black" if color == "w" else "White"
     except (IndexError, AttributeError):
         return "White"
 
