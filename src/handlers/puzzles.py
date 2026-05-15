@@ -1,7 +1,9 @@
 import threading
 import time
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import zoneinfo
+
 from src.services import LichessService, TelegramService
 from src.utils import Logger
 from src.config import (
@@ -9,6 +11,8 @@ from src.config import (
     TELEGRAM_PUZZLE_TOPIC_ID,
     TELEGRAM_CHAT_ID,
 )
+
+ROME_TZ = zoneinfo.ZoneInfo("Europe/Rome")
 
 PUZZLE_SCHEDULE_HOUR = 12
 PUZZLE_SCHEDULE_MINUTE = 30
@@ -20,7 +24,6 @@ lichess = LichessService()
 telegram = TelegramService()
 
 
-@staticmethod
 def side_to_move(fen: str) -> str:
     """Return 'White' or 'Black' for the player solving the puzzle."""
     try:
@@ -31,7 +34,6 @@ def side_to_move(fen: str) -> str:
 
 
 def build_puzzle_caption(
-    rating: int | str,
     side: str,
     display_difficulty: str,
 ) -> str:
@@ -98,7 +100,7 @@ def send_puzzle(user_id: int) -> None:
     photo_url = (
         f"https://lichess1.org/training/export/gif/thumbnail/{puzzle_id}.gif?theme={board_theme}"
     )
-    caption = build_puzzle_caption(rating, themes, side, display_difficulty)
+    caption = build_puzzle_caption(side, display_difficulty)
 
     sent_success, message_id = telegram.send_photo(
         photo_url,
@@ -183,18 +185,9 @@ def send_scheduled_puzzle() -> None:
 
 
 def seconds_until_next_puzzle(last_sent: datetime | None) -> float:
-    """
-    Return how many seconds to sleep before sending the next scheduled puzzle.
-
-    Rules:
-    - If never sent before, fire at the next 12:30 (today if still in the future,
-      otherwise tomorrow).
-    - If already sent, fire 2 days after the last send time at 12:30.
-    """
-    now = datetime.now()
+    now = datetime.now(ROME_TZ) 
 
     if last_sent is None:
-        # Next 12:30 from now
         candidate = now.replace(
             hour=PUZZLE_SCHEDULE_HOUR,
             minute=PUZZLE_SCHEDULE_MINUTE,
@@ -211,8 +204,7 @@ def seconds_until_next_puzzle(last_sent: datetime | None) -> float:
             microsecond=0,
         ) + timedelta(days=PUZZLE_INTERVAL_DAYS)
 
-    delta = (candidate - now).total_seconds()
-    return max(delta, 0)
+    return max((candidate - now).total_seconds(), 0)
 
 
 def puzzle_scheduler() -> None:
@@ -229,7 +221,7 @@ def puzzle_scheduler() -> None:
 
         try:
             send_scheduled_puzzle()
-            last_sent = datetime.now()
+            last_sent = datetime.now(ROME_TZ)
             logger.info("Scheduled puzzle sent successfully.")
         except Exception as e:
             logger.error(f"Scheduled puzzle error: {str(e)[:100]}")
